@@ -1,0 +1,60 @@
+Design Decisions:
+
+Change package structure so that model components are in their own package.
+
+Added MusicEditorView to be the interface for  all views.
+Added MusicEditorViewModel for the restricted methods that a view can see from a model.
+Changed ConsoleView to take in an Appendable and to only use methods supplied by the ViewModel.
+
+Added a NoteBuilder interface so that notes can be made outside of the Model package
+for testing purposes.
+
+Added DummyMidiDevice and DummyReceiver for the ability to test MidiViewImpl.
+MidiViewImpl takes in a MidiDevice which is the synthesiser it will end up using to send messages.
+
+Added extra fields to as well as accessors to NoteModel for ability to keep track of volume and
+instrumentation.
+
+Added an extra field to as well as an accessor to MusicEditorViewModel for the ability to
+keep track of tempo of a piece.
+
+MIDI Rendering:
+MidiView has a method play(MusicEditorViewModel, int). This method plays any NoteModels in
+MusicEditorViewModel that start at the supplied int. This allows for the controller to specify
+when to play. In order to make it easier to play full pieces I added MidiPlayView which implements
+MusicEditorView and when view(MusicEditorViewModel) is called on it, it plays the whole
+composition. this allows for Midi to be seen as a view for the factory method in
+MusicEditor.
+
+RENDERING GUI
+To render the visual view, we chose to work in Swing. We used a coordinate system, with
+everything being measured off of two constants, SQUARE_SIZE(The side length of a square that represents
+the width/height of a single beat of a note, also the height of each pitch in the score), and
+BOUNDARY_SIZE, which is the amount of whitespace left on the side of the score for rendering
+of the sidebar pitch names and header beat numbers.
+
+Rendering works primarily inside the GuiViewFrame(GVF) class and it's subclass ConcreteGuiViewPanel(CGVP).
+The GVF constructor is passed the MusicEditorViewModel to render, and creates a CGVP representing
+that model, using the coordinate system described above, a black square to represent the starting
+of any note, and the rest of the note represented by a particular color depending on the MIDI family
+which the instrument of that note is associated with. The header and sidebar are then added, essentially,
+using the logic for a consoleView but adding the produced result to the image instead of outputting
+it to the console. That breakdown is available in the JavaDoc of the method GetColor in CGVP.
+
+The rendered CGVP is then placed inside a JScrollPane, with it's maximum dimensions set to
+1000x1000 to allow for scrolling and adequate screen space. The final scrollPane is then added
+to the ContentPane, which is what Swing displays to the user when the "behind the scenes" rendering
+is done.
+
+The main design decision for the GUI rendering was whether to use Swing or JavaFX. I chose to work
+in Swing because as someone who is not familiar with either library, Swing is more closely aligned
+with the javalib library that we have used in the past, and it also works on a lower level,
+making it much easier to add/change small details on the image(for example: the addition or subtraction
+of a new note from the image.) The other design decisions that we made were the use of a coordinate
+system, which we chose because it allows for easily manipulable images in size and prevents
+overlapping and/or white-space bugs, and the decision to render different MIDI families in different
+colors, which is simply a convenience factor for the user.
+
+
+
+

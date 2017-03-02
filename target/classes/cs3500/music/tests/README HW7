@@ -1,0 +1,68 @@
+README Homework 7
+
+
+Composite View
+
+For the design of the composite view, we chose to have it take in both a MidiView and a GuiView.
+The methods on the MidiView are unchanged from the previous assignment,
+with the exception that we are only having it play a single beat at a time as opposed to
+playing the whole score in perpetuity. The guiview, and ConcreteGuiViewPanel(the implementation
+of the actual rendering), are substantially changed, however. Previously, the ConcreteGuiView
+panel simply rendered the entire panel at once, and used scrollbars to move along the piece
+as desired by the user. However, with the constant repainting of drawing the red bar and the
+requirement to scroll the panel as the midi view plays, that implementation was ineffective due
+to lag time in rendering and general inaccessability. As a result, we settled on a new
+implementation that bases the rendering off of the current beat that the score is playing.
+The ConcreteGuiView then renders the portion of the score that follows from the current beat to
+the end of the current visible portion of the panel, and then, once the modular arithmetic says
+that we have reached the end of the window and we have to upgrade, we update the left edge to the
+previous right side, and then repaint the new window accordingly. Thus, we are only re-drawing the
+background every (window width / 20) beats as opposed to every single beat, and drawing much less
+at a time, resulting in much quicker rendering and a fluid depiction as opposed to a laggy mess.
+
+To be able to get the current beat of the piece, we had to make an addition to our
+MusicEditorModel and MusicEditorViewModel. MEM allows for the current beat to be changed,
+and MEVM allows for getting the current beat. This change then pushed itself out to the rest
+of the keyboard functionality, with the keys changing the current beat in various ways
+depending on what each key desired(See the table below). This simplified the calculation of
+beats/octaves clicked from a coordinate and the drawing of the red line enormously.
+
+Keys to Actions:
+r --> Resets the composition by removing all the notes from the screen.
+Home(or fn+left arrow on a mac) --> Resets the current beat to zero, moves the view all the way
+to the beginning of the score.
+End(or fn+right arrow on a max) --> Sets the current beat to the final beat of the piece,
+moves the view all the way to the ending of the score.
+Left --> Decrements the current beat by one. Current beat cannot be negative
+Right --> Incremements the current beat by one. Current beat can exceed the final note!
+up --> Scrolls the window up.
+down --> Scrolls the window down.
+page up --> Scrolls the window all the way to the top.
+page down --> Scrolls the window all the way to the bottom.
+
+MouseEvents to Actions:
+Shift + click --> Removes the note clicked.
+Click and Drag --> If no note on the location clicked, add a note that goes from the starting
+beat clicked to the ending beat where released at the pitch of the release. If a note is clicked,
+drags the note and moves it to the release location. If a new note is created its instrument
+can be selected by holding down a number key when it is being created. Also if the drag goes
+backwards or is less than a beat in difference a note isn't created.
+
+For the design of the controller, we made a MusicEditorController Interface that has a run() method
+to start running the controller. I also added a MusicEditorControllerModel to allow for the
+controller to take in an object that has both the methods of the MusicEditorModel and
+MusicEditorViewModel. MusicComposition now implements MusicEditorControllerModel. Also
+MusicCompositionBuilderImp now returns a MusicEditorControllerModel so that a Controller can
+use it when it is called.
+
+Key and Mouse Handlers take in Maps of Integer to Runnables or Consumers respectively. Then
+Maps are made and assigned in the Concrete Controller class to the GuiView associated with the
+controller. A GuiView holds methods a controller needs and a GuiView should be able to provide.
+
+Consumers were needed for the MouseHandler so that it would allow for x and y coordinates to be
+available.
+
+MockGuiView was made to allow for testing the Key and MouseHandlers because it can act as a
+GuiView and get the handler then give it out so it can be tested. For the testing of adding,
+removing, and changing notes it used the x as the beat value and y + 24 as the position the note
+to be chanegd to.
